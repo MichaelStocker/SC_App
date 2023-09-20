@@ -12,7 +12,8 @@ for node in nodes:
     node_id = node.getAttribute('ID')
     node_name = node.getAttribute('Name')
     node_price = node.getAttribute('BasePrice')
-    if float(node_price) >= 75000:
+    node_file = node.getAttribute('FileName')
+    if node_file.Contains('Data\Libs\Foundry\Records\Entities\SCItem\Ships\')
         i+=1
         print (node_name + ' : ' + node_price + ' ID#: ' + node_id)
         testDict[float(node_price)] = node_name
