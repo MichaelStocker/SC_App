@@ -2,12 +2,33 @@ import xml.etree.ElementTree as ET
 import pandas as pd
 from xml.dom.minidom import parse, parseString, Node
 
-file = "Shops\RetailProductPrices.xml"
-doc = parse(file)
-print (doc.nodeName)
-print(doc.firstChild.tagName)
+shopInfo = "Shops\ShopLayouts.xml"
+shopDoc = parse(shopInfo)
+shopNodes = shopDoc.getElementsByTagName('ShopLayoutNode')
+shopItems = shopDoc.getElementsByTagName('ShopInventoryNode')
 
-nodes = doc.getElementsByTagName('Node')
+shopList = []
+shopItemList = []
+
+root = ET.parse(shopInfo)
+
+# Get all ShopInventoryNodes
+shop_inventory_nodes = root.findall('.//ShopInventoryNode')
+
+# Extract the IDs
+shop_inventory_ids = [node.get('ID') for node in shop_inventory_nodes]
+
+print (len(shop_inventory_ids))
+#for shop in shopNodes:
+    #shop_name = shop.getAttribute('Name')
+
+
+file = "Shops\RetailProductPrices.xml"
+productDoc = parse(file)
+print (productDoc.nodeName)
+print(productDoc.firstChild.tagName)
+
+nodes = productDoc.getElementsByTagName('Node')
 dataframes_by_type = {}
 
 # Define file paths
@@ -58,3 +79,9 @@ for node in nodes:
 for df_name, df in dataframes_by_type.items():
     print(f"DataFrame for {df_name}:")
     print(df)
+
+
+#shopList.append(shop_name)
+
+
+#print(shopList)
