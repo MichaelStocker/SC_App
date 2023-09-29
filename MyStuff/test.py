@@ -1,48 +1,48 @@
-import xml.etree.ElementTree as ET
 import pandas as pd
-from xml.dom.minidom import parse, parseString, Node
+import xml.etree.ElementTree as ET
+from xml.dom.minidom import parse
 
-shopInfo = "Shops\ShopLayouts.xml"
-shopDoc = parse(shopInfo)
-shopNodes = shopDoc.getElementsByTagName('ShopLayoutNode')
-shopItems = shopDoc.getElementsByTagName('ShopInventoryNode')
+# Parse ShopLayouts.xml to create a dictionary mapping IDs to ShopLayoutNode names
+shop_layouts_file = "Shops\\ShopLayouts.xml"
+shop_layouts_root = ET.parse(shop_layouts_file).getroot()
+id_to_shop_name = {}
+for shop_node in shop_layouts_root.findall('.//ShopLayoutNode'):
+    shop_name = shop_node.get('Name')
+    for item_node in shop_node.findall('.//ShopInventoryNode'):
+       inventoryID = item_node.get('InventoryID')
+        
 
-shopList = []
-shopItemList = []
+    
+    id_to_shop_name[inventoryID] = shop_name
 
-root = ET.parse(shopInfo)
-
-# Get all ShopInventoryNodes
-shop_inventory_nodes = root.findall('.//ShopInventoryNode')
-
-# Extract the IDs
-shop_inventory_ids = [node.get('ID') for node in shop_inventory_nodes]
-
-print (len(shop_inventory_ids))
-#for shop in shopNodes:
-    #shop_name = shop.getAttribute('Name')
-
-
-file = "Shops\RetailProductPrices.xml"
-productDoc = parse(file)
-print (productDoc.nodeName)
-print(productDoc.firstChild.tagName)
-
+# Parse RetailProductPrices.xml
+retail_prices_file = "Shops\\RetailProductPrices.xml"
+productDoc = parse(retail_prices_file)
 nodes = productDoc.getElementsByTagName('Node')
-dataframes_by_type = {}
 
 # Define file paths
 gvehicleFilePath = r'Data\Libs\Foundry\Records\Entities\GroundVehicles'
 shipFilePath = r'Data\Libs\Foundry\Records\Entities\Spaceships'
 partFilePath = r'Data\Libs\Foundry\Records\Entities\SCItem\Ships'
 
+dataframes_by_type = {}
+
+# Iterate through nodes
 for node in nodes:
     node_id = node.getAttribute('ID')
     node_name = node.getAttribute('Name')
     node_price = node.getAttribute('BasePrice')
     node_file = node.getAttribute('Filename')
 
+    if node_id in id_to_shop_name:
+        # Use the parent ShopLayoutNode name as the store location
+        store_location = id_to_shop_name[node_id]
+    else:
+        store_location = "Unknown"  # Default if not found
+
     if "Template" in node_name:
+        continue
+    if float(node_price) == 0.0:
         continue
     else:
         # Extract the relevant part of the filepath to name the DataFrame
@@ -62,11 +62,11 @@ for node in nodes:
         if df_name:
             # Check if DataFrame exists for this filepath, if not, create one
             if df_name not in dataframes_by_type:
-                dataframes_by_type[df_name] = pd.DataFrame(columns=['ID', 'Name', 'BasePrice', 'Filename'])  # Adjust column names accordingly
+                dataframes_by_type[df_name] = pd.DataFrame(columns=['StoreLocation', 'Name', 'BasePrice', 'Filename'])  # Adjust column names accordingly
         
             # Add data to the respective DataFrame
             new_df = pd.DataFrame({
-                'ID': [node_id],
+                'StoreLocation': [store_location],
                 'Name': [node_name],
                 'BasePrice': [node_price],
                 'Filename': [node_file]
@@ -74,11 +74,12 @@ for node in nodes:
             
             # Concatenate the new DataFrame with the existing DataFrame for the specified df_name
             dataframes_by_type[df_name] = pd.concat([dataframes_by_type[df_name], new_df], ignore_index=True)
-
+printDF = True
 # Print the DataFrames
-for df_name, df in dataframes_by_type.items():
-    print(f"DataFrame for {df_name}:")
-    print(df)
+if printDF:
+    for df_name, df in dataframes_by_type.items():
+        print(f"DataFrame for {df_name}:")
+        print(df)
 
 
 #shopList.append(shop_name)
